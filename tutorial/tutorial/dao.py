@@ -1,9 +1,12 @@
 from tutorial.models import Article, DBSession
+from urllib3.exceptions import InsecureRequestWarning
 
 import os
-import urllib
+import urllib3
+
 
 class ArticleDao(object):
+    urllib3.disable_warnings(InsecureRequestWarning)
 
     def add_article(self, item):
         a = Article()
@@ -22,6 +25,10 @@ class ArticleDao(object):
                 os.makedirs(file_path)
             file_suffix = os.path.splitext(img_url)[0]
             filename = '{}{}{}'.format(file_path, os.sep, file_name, file_suffix)
-            urllib.urlretrieve(img_url, filename)
+
+            http = urllib3.PoolManager()
+            response = http.request('GET', img_url)
+            with open(filename, 'wb') as f:
+                f.write(response.data)
         except IOError as e:
             print('文件操作失败', e)
